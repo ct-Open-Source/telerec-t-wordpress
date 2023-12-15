@@ -6,6 +6,7 @@
       directory: "{{ docker_dir }}/wordpress"
       subdirs: ["maria", "wordpress"]
       name: wordpress
+      port: 80
       traefik: true
       external: true
       watchtower: true
@@ -20,16 +21,14 @@
   template:
     src: nginx.conf.j2
     dest: '{{ service_cfg.directory }}/nginx.conf'
-    owner: '{{ user.name }}'
+    owner: '{{ admin.name }}'
     group: 'docker'
   tags: [ always ]
 
 - name: "Copy {{ service_cfg.name }} uploads.ini"
-  become: 'no'
-  synchronize:
+  ansible.builtin.copy:
     src: uploads.ini
     dest: '{{ service_cfg.directory }}/uploads.ini'
-    mode: push
   tags: [ always ]
 
 - ansible.builtin.import_role:
