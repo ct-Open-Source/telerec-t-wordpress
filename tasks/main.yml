@@ -1,0 +1,37 @@
+- ansible.builtin.import_role:
+    name: compose_hull
+    tasks_from: facts
+  vars:
+    service_defaults:
+      directory: "{{ docker_dir }}/wordpress"
+      subdirs: ["maria", "wordpress"]
+      name: wordpress
+      traefik: true
+      external: true
+      watchtower: true
+      autoheal: true
+      skip_network_definition: false
+
+- ansible.builtin.import_role:
+    name: compose_hull
+    tasks_from: create_directories
+
+- name: "Copy {{ service_cfg.name }} nginx.conf"
+  template:
+    src: nginx.conf.j2
+    dest: '{{ service_cfg.directory }}/nginx.conf'
+    owner: '{{ user.name }}'
+    group: 'docker'
+  tags: [ always ]
+
+- name: "Copy {{ service_cfg.name }} uploads.ini"
+  become: 'no'
+  synchronize:
+    src: uploads.ini
+    dest: '{{ service_cfg.directory }}/uploads.ini'
+    mode: push
+  tags: [ always ]
+
+- ansible.builtin.import_role:
+    name: compose_hull
+    tasks_from: deploy_docker

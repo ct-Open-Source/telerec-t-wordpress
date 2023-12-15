@@ -1,0 +1,43 @@
+version: "3.9"
+services:
+  maria:
+    image: mariadb
+    container_name: "{{ service_cfg.name }}_maria"
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD={{ service_cfg.db.root_password }}
+      - MYSQL_DATABASE={{ service_cfg.db.name }}
+      - MYSQL_USER={{ service_cfg.db.username }}
+      - MYSQL_PASSWORD={{ service_cfg.db.password }}
+    volumes:
+      - "{{ service_cfg.directory }}/maria:/var/lib/mysql:rw"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+  wordpress:
+    image: wordpress:fpm-alpine
+    container_name: "{{ service_cfg.name }}_wordpress"
+    restart: always
+    environment:
+      - WORDPRESS_DB_HOST={{ service_cfg.name }}_maria:3306
+      - WORDPRESS_DB_USER={{ service_cfg.db.username }}
+      - WORDPRESS_DB_PASSWORD={{ service_cfg.db.password }}
+      - WORDPRESS_DB_NAME={{ service_cfg.db.name }}
+    volumes:
+      - "{{ service_cfg.directory }}/2fauth.yml:/var/www/html:rw"
+      - "{{ service_cfg.directory }}/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro"
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    depends_on:
+      - "{{ service_cfg.name }}_maria"
+  nginx:
+    image: nginx:alpine
+    container_name: "{{ service_cfg.name }}_nginx"
+    restart: always
+    volumes:
+      - "{{ service_cfg.directory }}/nginx.conf:/etc/nginx/conf.d/default.conf:ro"
+      - "{{ service_cfg.directory }}/wordpress:/var/www/html:ro"
+    depends_on:
+      - "{{ service_cfg.name }}_maria"
+      - "{{ service_cfg.name }}_wordpress"
+    labels: *base_labels
+    networks: *base_networks

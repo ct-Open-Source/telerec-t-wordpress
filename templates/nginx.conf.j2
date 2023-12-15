@@ -1,0 +1,40 @@
+upstream php-handler {
+	server {{ service_cfg.name }}_wordpress:9000;
+}
+
+server {
+    listen 80;
+	listen [::]:80;
+
+    # set max upload size
+    client_max_body_size 512M;
+    fastcgi_buffers 64 4K;
+    # Remove X-Powered-By, which is an information leak
+    fastcgi_hide_header X-Powered-By;
+
+    index index.html index.php /index.php;
+	root /var/www/html;
+
+	location / {
+		try_files $uri $uri/ /index.php?$args;
+	}
+
+	location ~ \.php$ {
+		fastcgi_index	index.php;
+		fastcgi_split_path_info ^(.+?\.php)(\/.*|)$;
+        set $path_info $fastcgi_path_info;
+        try_files $fastcgi_script_name =404;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME /var/www/html$fastcgi_script_name;
+        #fastcgi_param PATH_INFO $path_info;
+        fastcgi_param HTTPS on;
+        # Avoid sending the security headers twice
+        fastcgi_param modHeadersAvailable true;
+        # Enable pretty urls
+        fastcgi_param front_controller_active true;
+        #fastcgi_pass php-handler;
+        fastcgi_pass	{{ service_cfg.name }}_wordpress:9000;
+        fastcgi_intercept_errors on;
+        fastcgi_request_buffering off;
+	}
+}
