@@ -11,6 +11,7 @@ services:
       - MYSQL_PASSWORD={{ service_cfg.db.password }}
     volumes:
       - "{{ service_cfg.directory }}/maria:/var/lib/mysql:rw"
+      - "{{ service_cfg.directory }}/utf8fix.cnf:/etc/mysql/conf.d/utf8fix.cnf:rw"
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
   wordpress:
@@ -22,6 +23,7 @@ services:
       - WORDPRESS_DB_USER={{ service_cfg.db.username }}
       - WORDPRESS_DB_PASSWORD={{ service_cfg.db.password }}
       - WORDPRESS_DB_NAME={{ service_cfg.db.name }}
+      #- WORDPRESS_DEBUG=True
     volumes:
       - "{{ service_cfg.directory }}/wordpress:/var/www/html:rw"
       - "{{ service_cfg.directory }}/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro"

@@ -31,6 +31,12 @@
     dest: '{{ service_cfg.directory }}/uploads.ini'
   tags: [ always ]
 
+- name: "Copy {{ service_cfg.name }} utf8fix.cnf"
+  ansible.builtin.copy:
+    src: utf8fix.cnf
+    dest: '{{ service_cfg.directory }}/utf8fix.cnf'
+  tags: [ always ]
+
 - ansible.builtin.import_role:
     name: compose_hull
     tasks_from: deploy_docker
